@@ -78,8 +78,8 @@ def parse_rower_data(barray) -> RowerData:
         average_power = int.from_bytes(barray[i : i + 2], "little", signed=True)
         i += 2
     if flag_resistance_level_present:
-        resistance_level = int.from_bytes(barray[i : i + 1], "little", signed=True)
-        i += 1
+        resistance_level = int.from_bytes(barray[i : i + 2], "little", signed=True)
+        i += 2
     if flag_expended_energy_present:
         total_energy = int.from_bytes(barray[i : i + 2], "little", signed=False)
         energy_per_hour = int.from_bytes(barray[i + 2 : i + 4], "little", signed=False)

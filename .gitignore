@@ -1,3 +1,5 @@
 test.py
 .DS_Store
 rowing_data_log*
+logs
+__pycache__

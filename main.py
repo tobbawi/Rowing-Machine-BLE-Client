@@ -4,6 +4,7 @@ from utils import datalog
 import asyncio
 from bleak import BleakScanner, BleakClient
 import datetime
+import requests
 from xml.etree.ElementTree import Element, SubElement, tostring
 from xml.dom.minidom import parseString
 
@@ -115,6 +116,22 @@ class RowingTrainerClient:
     def save_log_to_tcx(self, filename='rowing_data_log.tcx'):
         datalog.save_log_to_tcx(self.data_log, filename)
 
+    def upload_to_strava(self, filename, title, description):
+        headers = {
+            "Authorization": f"Bearer {const.STRAVE_ACCESS_TOKEN}"
+        }
+        files = {
+            'file': (filename, open(filename, 'rb')),
+            'data_type': (None, 'tcx'),
+            'name': (None, title),
+            'description': (None, description)
+        }
+        response = requests.post('https://www.strava.com/api/v3/uploads', headers=headers, files=files)
+        
+        if response.status_code == 201:
+            print(f"File uploaded successfully: {response.json()}")
+        else:
+            print(f"Failed to upload file: {response.status_code}, {response.text}")
 
 # Create and run the client
 client = RowingTrainerClient()
@@ -126,8 +143,17 @@ async def main():
 try:
     asyncio.run(main())
 except KeyboardInterrupt:
-    print("Program interrupted. Saving data log...")
-    filaname = datalog.generate_unique_filename()
-    client.save_log(filaname)
-    client.save_log_to_tcx(filaname)
+    print("Program stopped. Saving data log...")
+    filename = datalog.generate_unique_filename()
+    client.save_log(filename)
+    client.save_log_to_tcx(filename)
+    print("\nProgram interrupted. Would you like to upload the results to Strava? (y/n): ")
+    choice = input().strip().lower()
+    if choice == 'y':
+        #if client.data_log:
+        client.upload_to_strava("rowing_data_log_20240801_200347.tcx", "test upload", "test desc")
+        #else:
+        #    print("No data to upload.")
+    else:
+        print("Upload canceled.")
     print("Exiting...")
