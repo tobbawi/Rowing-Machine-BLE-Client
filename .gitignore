@@ -3,3 +3,5 @@ test.py
 rowing_data_log*
 logs
 __pycache__
+access_token.pickle
+client_info.pickle

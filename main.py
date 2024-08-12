@@ -63,7 +63,6 @@ class RowingTrainerClient:
 
     async def start_notifications(self):
         def callback(sender, data):
-            print(data)
             self.process_data(data)
 
         if self.device:
@@ -104,7 +103,7 @@ class RowingTrainerClient:
             try:
                 if not self.connected:
                     await self.reconnect()
-                await asyncio.sleep(5)  # Adjust the interval as needed
+                await asyncio.sleep(5)
             except Exception as e:
                 print(f"Error in main loop: {e}")
                 await asyncio.sleep(10)
@@ -116,44 +115,37 @@ class RowingTrainerClient:
     def save_log_to_tcx(self, filename='rowing_data_log.tcx'):
         datalog.save_log_to_tcx(self.data_log, filename)
 
-    def upload_to_strava(self, filename, title, description):
-        headers = {
-            "Authorization": f"Bearer {const.STRAVE_ACCESS_TOKEN}"
-        }
-        files = {
-            'file': (filename, open(filename, 'rb')),
-            'data_type': (None, 'tcx'),
-            'name': (None, title),
-            'description': (None, description)
-        }
-        response = requests.post('https://www.strava.com/api/v3/uploads', headers=headers, files=files)
-        
-        if response.status_code == 201:
-            print(f"File uploaded successfully: {response.json()}")
-        else:
-            print(f"Failed to upload file: {response.status_code}, {response.text}")
+    def upload_to_strava(self, filename):
+        datalog.upload_strava(filename)
 
-# Create and run the client
 client = RowingTrainerClient()
 
 async def main():
     await client.run()
     await client.main_loop()
 
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 try:
-    asyncio.run(main())
+    loop.run_until_complete(main())
 except KeyboardInterrupt:
     print("Program stopped. Saving data log...")
-    filename = datalog.generate_unique_filename()
-    client.save_log(filename)
-    client.save_log_to_tcx(filename)
-    print("\nProgram interrupted. Would you like to upload the results to Strava? (y/n): ")
-    choice = input().strip().lower()
-    if choice == 'y':
-        #if client.data_log:
-        client.upload_to_strava("rowing_data_log_20240801_200347.tcx", "test upload", "test desc")
-        #else:
-        #    print("No data to upload.")
-    else:
-        print("Upload canceled.")
-    print("Exiting...")
+    try:
+        filename = datalog.generate_unique_filename()
+        client.save_log(f"{filename}.txt")
+        client.save_log_to_tcx(f"{filename}.tcx")
+        print("\nProgram interrupted. Would you like to upload the results to Strava? (y/n): ")
+        choice = input().strip().lower()
+        if choice == 'y':
+            if client.data_log:
+                client.upload_to_strava(f"{filename}.tcx")
+            else:
+                print("No data to upload.")
+        else:
+            print("Upload canceled.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        print("Exiting...")
+finally:
+    loop.close()
