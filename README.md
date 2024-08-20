@@ -1,4 +1,4 @@
-# Virtufit Ultimate Pro 2i Rowing Client
+# Virtufit Ultimate Pro 2i Rowing Client + Upload to Strava
 
 This project is a simple client designed to connect to a Virtufit Ultimate Pro 2i rowing machine and upload rowing results to Strava. The client uses the latest Bluetooth FTMS (Fitness Machine Service) standards to ensure compatibility and accurate data transfer.
 
